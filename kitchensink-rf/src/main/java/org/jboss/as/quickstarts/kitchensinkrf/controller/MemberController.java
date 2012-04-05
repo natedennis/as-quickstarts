@@ -4,6 +4,9 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateful;
+import javax.enterprise.context.Conversation;
+import javax.enterprise.context.ConversationScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Event;
 import javax.enterprise.inject.Model;
 import javax.enterprise.inject.Produces;
@@ -21,7 +24,10 @@ import org.richfaces.cdi.push.Push;
 // EL name
 // Read more about the @Model stereotype in this FAQ:
 // http://sfwk.org/Documentation/WhatIsThePurposeOfTheModelAnnotation
-@Model
+//@Model
+@Named
+@Stateful
+@ConversationScoped
 public class MemberController {
 
    public static final String PUSH_CDI_TOPIC = "pushCdi";
@@ -44,6 +50,59 @@ public class MemberController {
       return newMember;
    }
 
+	private Long id;
+
+	public Long getId() {
+		return this.id;
+	}
+
+	public void setId(Long id) {
+		if (FacesContext.getCurrentInstance().isPostback()) {
+			return;
+		}		
+
+		if (this.conversation.isTransient()) {
+			this.conversation.begin();
+		}
+		this.id = id;
+	}
+	
+	@Inject
+	private Conversation conversation; 
+   
+	
+    @Inject
+    private EntityManager em;
+	
+	public Member retrieve(Long id) {
+
+		//if (FacesContext.getCurrentInstance().isPostback()) {
+		//	return;
+		//}
+		System.out.println("in retrieve");
+
+//		if (this.conversation.isTransient()) {
+//			this.conversation.begin();
+//		}
+		
+		if (id == null) {
+			this.member = new Member();
+			System.out.println("id is null");
+			return this.member;
+			
+		} else {
+			System.out.println("id is: " + id);
+			this.member = this.em.find(Member.class, id);
+			return this.member;
+		}
+	
+	}
+	
+   /*public void end(){
+	   this.conversation.end();
+   }
+*/   
+	
    @Produces
    @Named
    public Member getMember() {
@@ -51,6 +110,14 @@ public class MemberController {
    }
 
    public void setMember(Member member) {
+	/*	if (FacesContext.getCurrentInstance().isPostback()) {
+			return;
+		}		
+
+		if (this.conversation.isTransient()) {
+			this.conversation.begin();
+		}
+		*/
       this.member = member;
    }
 
