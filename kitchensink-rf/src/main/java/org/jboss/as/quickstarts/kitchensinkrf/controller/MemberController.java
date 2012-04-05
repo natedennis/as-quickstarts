@@ -24,10 +24,10 @@ import org.richfaces.cdi.push.Push;
 // EL name
 // Read more about the @Model stereotype in this FAQ:
 // http://sfwk.org/Documentation/WhatIsThePurposeOfTheModelAnnotation
-//@Model
-@Named
-@Stateful
-@ConversationScoped
+@Model
+//@Named
+//@Stateful
+//@ConversationScoped
 public class MemberController {
 
    public static final String PUSH_CDI_TOPIC = "pushCdi";
@@ -57,34 +57,25 @@ public class MemberController {
 	}
 
 	public void setId(Long id) {
-		if (FacesContext.getCurrentInstance().isPostback()) {
-			return;
-		}		
-
-		if (this.conversation.isTransient()) {
-			this.conversation.begin();
-		}
 		this.id = id;
 	}
 	
-	@Inject
-	private Conversation conversation; 
+	//@Inject
+	//private Conversation conversation; 
    
 	
     @Inject
     private EntityManager em;
 	
-	public Member retrieve(Long id) {
+	public Member retrieve() {
 
-		//if (FacesContext.getCurrentInstance().isPostback()) {
-		//	return;
-		//}
+		String param = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("id");
+		Long id = null;
+		if(param != null)
+			id = Long.parseLong(param);
+		
 		System.out.println("in retrieve");
 
-//		if (this.conversation.isTransient()) {
-//			this.conversation.begin();
-//		}
-		
 		if (id == null) {
 			this.member = new Member();
 			System.out.println("id is null");
@@ -106,18 +97,22 @@ public class MemberController {
    @Produces
    @Named
    public Member getMember() {
+	   String param = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("id");
+		Long id = null;
+		if(param != null)
+			id = Long.parseLong(param);
+		
+		System.out.println("in get member");
+
+		if (id != null) {
+			System.out.println("id is: " + id);
+			member = this.em.find(Member.class, id);
+		}
+	   
       return member;
    }
 
    public void setMember(Member member) {
-	/*	if (FacesContext.getCurrentInstance().isPostback()) {
-			return;
-		}		
-
-		if (this.conversation.isTransient()) {
-			this.conversation.begin();
-		}
-		*/
       this.member = member;
    }
 
